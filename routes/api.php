@@ -1,6 +1,6 @@
 <?php
 
-use Illuminate\Http\Request;
+use App\Services\GitService;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -14,6 +14,60 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+Route::post('clone', function () {
+    request()->validate([
+        'url' => 'required',
+    ]);
+
+    $service = app(GitService::class);
+
+    return $service->cloneRepo(request('url'));
+});
+
+Route::post('fetch-tags', function () {
+    request()->validate([
+        'url' => 'required',
+    ]);
+
+    $service = app(GitService::class);
+
+    return $service->getTags(request('url'));
+});
+
+Route::post('fetch-branches', function () {
+    request()->validate([
+        'url' => 'required',
+    ]);
+
+    $service = app(GitService::class);
+
+    return $service->getBranches(request('url'));
+});
+
+Route::post('fetch-logs', function () {
+    request()->validate([
+        'url' => 'required',
+        'release_version' => 'required|string',
+        'ref' => 'required|string',
+    ]);
+
+    $service = app(GitService::class);
+
+    return response()->json(
+        $service->getLog(request('url'), request('release_version'), request('ref'))
+    );
+});
+
+Route::post('create-tag', function () {
+    request()->validate([
+        'url' => 'required',
+        'release_version' => 'required|string',
+        'ref' => 'required|string',
+    ]);
+
+    $service = app(GitService::class);
+
+    return response()->json(
+        $service->createTag(request('url'), request('release_version'), request('ref'))
+    );
 });

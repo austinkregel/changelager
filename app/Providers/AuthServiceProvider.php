@@ -2,18 +2,25 @@
 
 namespace App\Providers;
 
+use App\Models\Release;
+use App\Models\Repository;
+use App\Models\Team;
+use App\Policies\ReleasePolicy;
+use App\Policies\RepositoryPolicy;
+use App\Policies\TeamPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
-use Illuminate\Support\Facades\Gate;
 
 class AuthServiceProvider extends ServiceProvider
 {
     /**
      * The policy mappings for the application.
      *
-     * @var array<class-string, class-string>
+     * @var array
      */
     protected $policies = [
-        // 'App\Models\Model' => 'App\Policies\ModelPolicy',
+        Team::class => TeamPolicy::class,
+        Repository::class => RepositoryPolicy::class,
+        Release::class => ReleasePolicy::class,
     ];
 
     /**

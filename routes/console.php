@@ -1,5 +1,6 @@
 <?php
 
+use App\Services\GitService;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 
