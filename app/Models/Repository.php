@@ -27,7 +27,7 @@ class Repository extends Model
     public $hidden = ['private_key'];
 
     public $casts = [
-        'last_released_at' => 'date',
+        'last_released_at' => 'date:F j, Y',
         'is_public' => 'boolean',
         'use_v_in_version' => 'boolean',
     ];
