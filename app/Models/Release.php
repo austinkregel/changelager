@@ -13,6 +13,7 @@ class Release extends Model
         'version',
         'hash',
         'notes',
+        'released_at',
     ];
 
     public function repository()

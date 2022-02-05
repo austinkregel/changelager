@@ -193,9 +193,13 @@ export default defineComponent({
                     this.tags = data;
                     this.form.tag = data[0].tag
                     this.hasAccess = true;
+                    this.errors = [];
                     resolve();
                 })
-                .catch(reject)
+                .catch((e) => {
+                    this.errors = [e.response.data.message];
+                    reject();
+                })
                 .finally(() => {
                     this.loading = false;
                 })
@@ -210,6 +214,7 @@ export default defineComponent({
                 .then(({ data }) => {
                     this.branches = data;
                     this.hasAccess = true;
+                    this.errors = [];
                     resolve()
                 })
                 .catch(reject)
@@ -226,6 +231,7 @@ export default defineComponent({
                 })
                 .then(({ data }) => {
                     this.hasAccess = true;
+                    this.errors = [];
                     resolve();
                 })
                 .catch((error) => {
@@ -244,7 +250,9 @@ export default defineComponent({
                 ref: this.form.hash,
                 body: this.form.body,
             })
-            .then(() => {
+            .then(async () => {
+                await this.fetchTags();
+                this.errors = [];
                 window.location.replace('/repositories/' + this?.repository?.id);
             })
             .catch((error) => {
@@ -268,9 +276,19 @@ export default defineComponent({
                     this.logs = data;
                     this.form.body = "## Release notes\n\n" + data.map(commit => ' * ' + commit.description.trim()).join("\n") + "\n\n" + 'A release from [Change Lager](https://changelager.app)'
                     this.hasAccess = true;
+                    this.errors = [];
                     resolve();
                 })
-                .catch(reject)
+                .catch((e) => {
+                    if (e?.response?.data?.errors) {
+                        Object.keys(e.response.data.errors).forEach(key => {
+                            this.errors = this.errors.concat(e.response.data.errors[key]);
+                        });
+                    } else {
+                        this.errors = [e.message];
+                    }
+                    reject();
+                })
                 .finally(() => {
                     this.loading = false;
                 })

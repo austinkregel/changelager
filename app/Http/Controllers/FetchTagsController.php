@@ -32,22 +32,28 @@ class FetchTagsController
                 $localTags = $repository->releases()->whereIn('version', $tags->map(fn ($model) => $model['tag']))->get();
 
                 foreach ($tags as $tag) {
+                    if (empty($tag['tag'])) {
+                        continue;
+                    }
+
                     if (! $localTags->contains('version', $tag['tag'])) {
-                        $tag = $repository->releases()->firstOrNew([
+                        $localTag = $repository->releases()->firstOrNew([
                             'version' => $tag['tag'],
+                            'hash' =>  $tag['hash'] ?? null,
                         ], [
                             'version' => $tag['tag'],
-                            'notes' => $tag['notes'],
+                            'notes' => $tag['notes'] ?? $tag['hash'] ?? null,
                             'released_at' => $tag['date'],
                         ]);
 
-                        $tag->fill([
+                        $localTag->fill([
                             'version' => $tag['tag'],
-                            'notes' => $tag['notes'],
+                            'notes' => $tag['notes'] ?? null,
                             'released_at' => $tag['date'],
+                            'hash' =>  $tag['hash'] ?? null,
                         ]);
 
-                        $tag->save();
+                        $localTag->save();
                     }
                 }
             });

@@ -55,10 +55,10 @@
             <div class="flex flex-col gap-4">
                 <div v-for="release in repository.releases" :key="'release-key-' + release.version" class="bg-white dark:bg-slate-700 rounded p-4">
                     <h2 class="text-2xl leading-6 font-medium text-slate-900 dark:text-slate-200">{{ release.version }}</h2>
-                    <h6 class="text-sm leading-6 font-medium text-slate-900 dark:text-slate-300">on {{ formatDate(release.updated_at) }}</h6>
+                    <h6 class="text-sm leading-6 font-medium text-slate-900 dark:text-slate-300">on {{ formatDate(release.released_at) }}</h6>
 
                     <div class="mt-2 max-w-xl text-sm text-slate-500">
-                        <div class="prose dark:prose-invert mt-2 tracking-tight leading-tight" v-html="marked.parse(release.notes, { sanitized: true, })"></div>
+                        <div class="prose dark:prose-invert mt-2 tracking-tight leading-tight" v-html="marked.parse(release?.notes ?? '', { sanitized: true, })"></div>
                     </div>
 
                     <div class="text-xs mt-2 text-slate-800 dark:text-slate-200 tracking-wide">Released hash: {{ release.hash.substr(0, 16) }}</div>

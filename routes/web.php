@@ -30,7 +30,7 @@ Route::middleware(['auth:sanctum', 'verified'])->get('/repositories/new', functi
 })->name('repositories:new');
 
 Route::middleware(['auth:sanctum', 'verified'])->get('/repositories/{repository}', function (Repository $repository) {
-    $repository->load('releases');
+    $repository->load(['releases' => fn ($query) => $query->orderBy('released_at', 'desc')]);
     return Inertia::render('Repositories/Show', [
         'repository' => $repository,
     ]);

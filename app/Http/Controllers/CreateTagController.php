@@ -23,6 +23,7 @@ class CreateTagController
             'version' => request('release_version'),
             'hash' => request('ref'),
             'notes' => request('body'),
+            'released_at' => now(),
         ]);
 
         return response()->json($tag);    
