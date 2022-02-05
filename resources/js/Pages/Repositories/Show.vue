@@ -1,5 +1,5 @@
 <template>
-    <app-layout title="Dashboard">
+    <app-layout :title="repository?.name">
         <template #header>
             <div class="flex justify-between items-center">
                 <h2 v-if="repository" class="font-semibold text-xl text-slate-800 dark:text-slate-100 leading-tight">

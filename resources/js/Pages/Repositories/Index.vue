@@ -1,5 +1,5 @@
 <template>
-    <app-layout title="Dashboard">
+    <app-layout title="Repositories">
         <template #header>
             <div class="flex justify-between items-center">
                 <h2 class="font-semibold text-xl text-slate-800 dark:text-slate-100 leading-tight">
