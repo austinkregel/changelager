@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Repository;
 use App\Services\GitService;
 
 class FetchTagsController 
@@ -18,7 +19,7 @@ class FetchTagsController
 
         auth()->user()->repositories()->where('url', request('url'))
             ->get()
-            ->each(function ($repository) use ($tags) {
+            ->each(function (Repository $repository) use ($tags) {
                 $latestTag = $tags[0] ?? null;
 
                 if (isset($latestTag)) {
@@ -28,15 +29,25 @@ class FetchTagsController
                     ]);
                 }
 
-                $localTags = $repository->tags()->whereIn('version', array_map(fn ($model) => $model['tag'], $tags))->get();
+                $localTags = $repository->releases()->whereIn('version', array_map(fn ($model) => $model['tag'], $tags))->get();
 
                 foreach ($tags as $tag) {
                     if (! $localTags->contains('version', $tag['tag'])) {
-                        $repository->tags()->create([
+                        $tag = $repository->releases()->firstOrNew([
+                            'version' => $tag['tag'],
+                        ], [
                             'version' => $tag['tag'],
                             'notes' => $tag['notes'],
                             'released_at' => $tag['date'],
                         ]);
+
+                        $tag->fill([
+                            'version' => $tag['tag'],
+                            'notes' => $tag['notes'],
+                            'released_at' => $tag['date'],
+                        ])
+
+                        $tag->save();
                     }
                 }
             });
