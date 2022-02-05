@@ -19,15 +19,19 @@ use Inertia\Inertia;
 
 Route::get('/', fn() => redirect('/login'))->middleware(RedirectIfAuthenticated::class);
 
-Route::middleware(['auth:sanctum', 'verified'])->get('/dashboard', function () {
-    return Inertia::render('Dashboard');
-})->name('dashboard');
-
 Route::middleware(['auth:sanctum', 'verified'])->get('/repositories', function () {
-    return Inertia::render('Repositories');
+    return Inertia::render('Repositories/Index', [
+        'repositories' => auth()->user()->repositories()->with(['releases' => fn ($query) => $query->orderBy('released_at', 'desc')])->get()->toArray()
+    ]);
 })->name('repositories');
+
+Route::middleware(['auth:sanctum', 'verified'])->get('/repositories/new', function () {
+    return Inertia::render('Repositories/Create');
+})->name('repositories:new');
+
 Route::middleware(['auth:sanctum', 'verified'])->get('/repositories/{repository}', function (Repository $repository) {
-    return Inertia::render('RepositoryShow', [
+    $repository->load('releases');
+    return Inertia::render('Repositories/Show', [
         'repository' => $repository,
     ]);
 })->name('repositories:id');

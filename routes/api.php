@@ -1,5 +1,11 @@
 <?php
 
+use App\Http\Controllers\CreateTagController;
+use App\Http\Controllers\FetchBranchesController;
+use App\Http\Controllers\FetchLogsController;
+use App\Http\Controllers\FetchTagsController;
+use App\Http\Controllers\RepositoryCloneController;
+use App\Http\Controllers\RepositoryController;
 use App\Services\GitService;
 use Illuminate\Support\Facades\Route;
 
@@ -14,60 +20,9 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::post('clone', function () {
-    request()->validate([
-        'url' => 'required',
-    ]);
-
-    $service = app(GitService::class);
-
-    return $service->cloneRepo(request('url'));
-});
-
-Route::post('fetch-tags', function () {
-    request()->validate([
-        'url' => 'required',
-    ]);
-
-    $service = app(GitService::class);
-
-    return $service->getTags(request('url'));
-});
-
-Route::post('fetch-branches', function () {
-    request()->validate([
-        'url' => 'required',
-    ]);
-
-    $service = app(GitService::class);
-
-    return $service->getBranches(request('url'));
-});
-
-Route::post('fetch-logs', function () {
-    request()->validate([
-        'url' => 'required',
-        'release_version' => 'required|string',
-        'ref' => 'required|string',
-    ]);
-
-    $service = app(GitService::class);
-
-    return response()->json(
-        $service->getLog(request('url'), request('release_version'), request('ref'))
-    );
-});
-
-Route::post('create-tag', function () {
-    request()->validate([
-        'url' => 'required',
-        'release_version' => 'required|string',
-        'ref' => 'required|string',
-    ]);
-
-    $service = app(GitService::class);
-
-    return response()->json(
-        $service->createTag(request('url'), request('release_version'), request('ref'))
-    );
-});
+Route::apiResource('repositories', RepositoryController::class);
+Route::post('clone', RepositoryCloneController::class);
+Route::post('fetch-tags', FetchTagsController::class);
+Route::post('fetch-branches', FetchBranchesController::class);
+Route::post('fetch-logs', FetchLogsController::class);
+Route::post('create-tag', CreateTagController::class);

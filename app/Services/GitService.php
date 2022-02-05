@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Exceptions\UnauthorizedWhenCloning;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 use Illuminate\Validation\ValidationException;
@@ -34,7 +35,7 @@ class GitService
             $this->removeRepo($repoUrl);
         }
     }
-
+    
     public function cloneRepo(string $repo)
     {
         $path = storage_path('app/' . Str::slug($repo));
@@ -43,14 +44,19 @@ class GitService
             $this->removeRepo($repo);
         }
 
+        if (str_starts_with($repo, 'https://') || str_starts_with($repo, 'http://')) {
+            $parts = parse_url($repo);
+            $repo = sprintf('git@%s:%s', $parts['host'], trim($parts['path'], '/'));
+        }
+
         $getCloneRepo = new Process(['git', 'clone', $repo, $path], null, [
-            'GIT_SSH_COMMAND' => 'ssh -i "' . storage_path('ssh-key') . '" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
+            'GIT_SSH_COMMAND' => 'ssh -i "' . $path  . '.pem" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
         ]);
 
         $getCloneRepo->run();
 
         if (!$getCloneRepo->isSuccessful()) {
-            throw new \Exception($getCloneRepo->getErrorOutput());
+            throw new UnauthorizedWhenCloning($getCloneRepo->getErrorOutput());
         }
     }
 
@@ -70,13 +76,35 @@ class GitService
         $path = storage_path('app/' . Str::slug($url));
         abort_if(!file_exists($path), 422, "Repository hasn't been cloned.");
        
-        $process = new Process(['git', 'tag'], $path);
+        $process = new Process(['git', 'log', '--tags', '--simplify-by-decoration', '--pretty=%ai %d  %H'], $path);
 
         $process->run();
 
-        return array_values(array_filter(
-            array_map('trim', explode("\n", $process->getOutput()))
-        ));
+        return Str::of($process->getOutput())
+        ->explode("\n")
+        ->map('trim')
+        ->flatMap(function ($row) {
+            $formattedRow = explode('  ', $row);
+            $tag = $formattedRow[1] ?? "";
+            preg_match('#\((.*?)\)#', $tag, $match);
+            $potentialTag = ($match[1] ?? "");
+            $hash = trim(end($formattedRow));
+
+            return Str::of($potentialTag)->explode(", ")->filter()->filter(fn($rawRefName) => Str::startsWith($rawRefName, 'tag: '))->map(function ($rawRefName) {
+                    return Str::substr($rawRefName, 5);
+                
+                return $rawRefName;
+            })->values()->map(fn ($tag) => [
+                'date' => Carbon::parse(trim($formattedRow[0], '"'))->format('Y-m-d'),
+                'tag' => $tag,
+                'hash' => $hash,
+            ])->filter(fn($tag) => !empty($tag['tag']));
+        })
+        ->filter()
+        ->values()
+        ->sortByDesc(function(array $tag) {
+            return $tag['date'];
+        });
     }
 
     public function getBranches($url)
@@ -160,12 +188,14 @@ class GitService
         $outputCheckout->run();
 
         $outputTag = new Process(['git', 'tag', $lastRelease], $path, [
-            'GIT_SSH_COMMAND' => 'ssh -i "' . storage_path('ssh-key') . '" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
+            'GIT_SSH_COMMAND' => 'ssh -i "' . $path  . '.pem" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null',
+            'GIT_COMMITTER_NAME' => 'Changelager Bot',
+            'GIT_COMMITTER_EMAIL' => 'lager@changed.to'
         ]);
         $outputTag->run();
     
         $outputPush = new Process(['git', 'push', 'origin', $lastRelease, '--verbose'], $path, [
-            'GIT_SSH_COMMAND' => 'ssh -i "' . storage_path('ssh-key') . '" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
+            'GIT_SSH_COMMAND' => 'ssh -i "' . $path  . '.pem" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
         ]);
         $outputPush->run();
 

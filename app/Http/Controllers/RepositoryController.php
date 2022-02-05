@@ -7,84 +7,44 @@ use Illuminate\Http\Request;
 
 class RepositoryController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
     public function index()
     {
         return Repository::query()
+            ->with('team')
             ->where('team_id', auth()->user()->current_team_id)
             ->get();
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-
-        return Repository::query()
-            ->where('team_id', auth()->user()->current_team_id)
-            ->get();    
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
     public function store(Request $request)
     {
-        //
+        $data = $request->validate([
+            'name' => 'required|string|max:255',
+            'slug' => 'required|string|max:255',
+            'url' => 'required|string|max:2048',
+            'is_public' => 'required|boolean',
+            'use_v_in_version' => 'required|boolean',
+        ]);
+
+        $resource = auth()->user()->currentTeam->repositories()->create($data);
+        return $resource->refresh();
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\Models\Repository  $repository
-     * @return \Illuminate\Http\Response
-     */
     public function show(Repository $repository)
     {
-        //
+        return $repository;
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\Repository  $repository
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(Repository $repository)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Repository  $repository
-     * @return \Illuminate\Http\Response
-     */
     public function update(Request $request, Repository $repository)
     {
-        //
+        $repository->update($request->all());
+
+        return $repository->refresh();
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\Repository  $repository
-     * @return \Illuminate\Http\Response
-     */
+
     public function destroy(Repository $repository)
     {
-        //
+        $repository->delete();
+        return response([], 204);
     }
 }

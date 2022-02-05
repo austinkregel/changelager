@@ -20,6 +20,7 @@ class CreateReleasesTable extends Migration
             $table->string('version');
             $table->longText('notes')->nullable();
             $table->string('hash');
+            $table->dateTime('released_at')->nullable();
             $table->timestamps();
         });
     }

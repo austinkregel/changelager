@@ -2,6 +2,9 @@
 
 namespace App\Providers;
 
+use App\Events\ReleaseTagged;
+use App\Events\RepositoryAdded;
+use App\Listeners\UpdateTagAndLastReleaseOnRepository;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
@@ -18,13 +21,14 @@ class EventServiceProvider extends ServiceProvider
         Registered::class => [
             SendEmailVerificationNotification::class,
         ],
+        ReleaseTagged::class => [
+            UpdateTagAndLastReleaseOnRepository::class,
+        ],
+        RepositoryAdded::class => [
+
+        ]
     ];
 
-    /**
-     * Register any events for your application.
-     *
-     * @return void
-     */
     public function boot()
     {
         //

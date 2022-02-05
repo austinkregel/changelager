@@ -11,12 +11,12 @@
                 <div class="mt-5 md:mt-0 md:col-span-2">
                     <div class="shadow sm:rounded-md sm:overflow-hidden">
                         <div class="px-4 py-5 space-y-4 sm:p-6">
-                            <div class="col-span-6">
+                            <div v-if="form.name" class="col-span-6">
                                 <label for="name" class="block font-medium">Name</label>
                                 <input v-model="form.name" @input="onNameChange" placeholder="finance.git" type="text" name="repo-address"  class="dark:bg-slate-800 dark:border-slate-600 mt-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-slate-300 rounded-md" />
                             </div>
 
-                            <div class="col-span-6">
+                            <div v-if="form.slug" class="col-span-6">
                                 <label for="slug" class="block font-medium">Slug</label>
                                 <input v-model="form.slug" placeholder="finance.git" type="text" name="repo-address" disabled class="opacity-75 dark:bg-slate-800 dark:border-slate-600 mt-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-slate-300 rounded-md" />
                             </div>
@@ -28,7 +28,7 @@
                             <div class="space-y-2">
                                 <div class="flex items-start">
                                     <div class="h-5 flex items-center">
-                                        <input id="is_public" name="is_public" type="checkbox" class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 dark:text-indigo-200 border-slate-300 rounded" />
+                                        <input v-model="form.is_public" id="is_public" name="is_public" type="checkbox" class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 dark:text-indigo-200 border-slate-300 rounded" />
                                     </div>
                                     <div class="ml-3 text-sm">
                                         <label for="is_public" class="font-medium text-slate-700 dark:text-slate-100">Public Log</label>
@@ -38,10 +38,10 @@
                                 
                                 <div class="flex items-start">
                                     <div class="h-5 flex items-center">
-                                        <input id="is_public" name="is_public" type="checkbox" class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 dark:text-indigo-200 border-slate-300 rounded" />
+                                        <input v-model="form.use_v_in_version" id="use_v_in_version" name="use_v_in_version" type="checkbox" class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 dark:text-indigo-200 border-slate-300 rounded" />
                                     </div>
                                     <div class="ml-3 text-sm">
-                                        <label for="is_public" class="font-medium text-slate-700 dark:text-slate-100">Use V in Version Number</label>
+                                        <label for="use_v_in_version" class="font-medium text-slate-700 dark:text-slate-100">Use V in Version Number</label>
                                         <div class="text-slate-500 dark:text-slate-300">This tells Changelager to put a lowercase v at the start of the version number.<p> ex: v10.3.1</p></div>
                                     </div>
                                 </div>
@@ -50,16 +50,22 @@
                         {{ form.errors.tag}}
 
                         
-                        <div class="px-2 py-3 bg-slate-50 dark:bg-slate-600 text-right">
+                        <div class="px-2 py-3 bg-slate-50 dark:bg-slate-600 flex justify-between items-center w-full">
+                            <a href="/repositories"
+                               class="inline-flex items-center px-4 py-2 bg-orange-400 dark:bg-slate-500 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-orange-700 dark:hover:bg-amber-600 active:bg-orange-900 dark:active:bg-amber-900 focus:outline-none focus:border-orange-900 dark:focus:border-amber-900 focus:ring focus:ring-orange-300 dark:focus:ring-amber-600 disabled:opacity-25 transition"
+                            >
+                            Cancel
+                            </a>
+
                             <button 
                                 :disabled="loading"
-                                @click="testAccess" 
+                                @click="save" 
                                 type="button" 
                                 :class="[loading ? 'opacity-50 cursor-disabled' : '']" 
                                class="inline-flex items-center px-4 py-2 bg-orange-400 dark:bg-amber-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-orange-700 dark:hover:bg-amber-600 active:bg-orange-900 dark:active:bg-amber-900 focus:outline-none focus:border-orange-900 dark:focus:border-amber-900 focus:ring focus:ring-orange-300 dark:focus:ring-amber-600 disabled:opacity-25 transition"
                             >
-                                <span v-if="!loading">Generate SSH Key</span>
-                                <span v-else>Generating SSH Key</span>
+                                <span v-if="!loading">Save Repository</span>
+                                <span v-else>Saving Repository</span>
                             </button>
                         </div>
                     </div>
@@ -100,7 +106,11 @@
 
         setup() {
             const form = ref({
+                name: '',
+                slug: '',
                 url: '',
+                is_public: false,
+                use_v_in_version: false,
                 errors: {},
             });
             return {
@@ -129,6 +139,7 @@
                     })
                     .then(({ data }) => {
                         this.hasAccess = true;
+                        this.errors = [];
                         resolve();
                     })
                     .catch(reject)
@@ -137,6 +148,18 @@
                     })
                 });
             },
+
+            save() {
+                return new Promise((resolve, reject) => {
+                    axios.post('/api/repositories', this.form)
+                    .then(({ data }) => {
+                        window.location = '/repositories/' + data.id;
+
+                        resolve(data);
+                    })
+                    .catch(reject)
+                });
+            }
         }
     })
 </script>

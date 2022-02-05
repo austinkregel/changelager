@@ -1,6 +1,7 @@
 <template>
     <Head title="Log in" />
-
+<div>
+    
     <jet-authentication-card>
         <template #logo>
             <jet-authentication-card-logo />
@@ -40,7 +41,14 @@
                 </jet-button>
             </div>
         </form>
+
+        <template #registerLink>
+            <Link :href="route('register')" class="mr-6 underline text-sm text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-400">
+                No account? Register now!
+            </Link>
+        </template>
     </jet-authentication-card>
+</div>
 </template>
 
 <script>
