@@ -45,7 +45,7 @@ class FetchTagsController
                             'version' => $tag['tag'],
                             'notes' => $tag['notes'],
                             'released_at' => $tag['date'],
-                        ])
+                        ]);
 
                         $tag->save();
                     }
