@@ -29,7 +29,7 @@ class FetchTagsController
                     ]);
                 }
 
-                $localTags = $repository->releases()->whereIn('version', array_map(fn ($model) => $model['tag'], $tags))->get();
+                $localTags = $repository->releases()->whereIn('version', $tags->map(fn ($model) => $model['tag']))->get();
 
                 foreach ($tags as $tag) {
                     if (! $localTags->contains('version', $tag['tag'])) {
