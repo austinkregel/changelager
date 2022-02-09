@@ -37,8 +37,10 @@ Route::middleware(['auth:sanctum', 'verified', 'hasRole:releaser'])->get('/repos
     ]);
 })->name('repositories:id');
 
-Route::middleware([PublicRepositoryMiddleware::class])->domain('{repoIdentifier}.'.config('app.vanity_domain'))->get('/{version?}', function ($repositoryIdentifier, $version = null) {
+Route::domain('{repoIdentifier}.'.config('app.vanity_domain'))->get('/{version?}', function ($repositoryIdentifier, $version = null) {
     $repository = Repository::where('slug', $repositoryIdentifier)->firstOrFail();
+
+    abort_unless($repository->is_public, 404);
 
     $repository->load(['releases' => fn ($query) => $query->orderBy('released_at', 'desc')]);
     
