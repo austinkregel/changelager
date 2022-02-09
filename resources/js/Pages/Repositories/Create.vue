@@ -86,7 +86,7 @@
                 </div>
 
                 <div class="ml-4 text-center text-sm sm:text-right sm:ml-0">
-                    Changelager v3.0.0
+                    Changelager {{$attrs.version}}
                 </div>
             </div>
         </div>

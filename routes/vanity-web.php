@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Repository;
+use App\Services\SelfService;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -13,5 +14,6 @@ Route::middleware('web')->get('/{version?}', function ($repositoryIdentifier, $v
     
     return Inertia::render('Repositories/Public', [
         'repository' => $repository,
+        'version' => app(SelfService::class)->version(),
     ]);
 })->name('public:id');
