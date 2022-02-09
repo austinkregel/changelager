@@ -62,7 +62,7 @@
             </button>
             
             <button 
-                v-if="hasAccess && !form.body"
+                v-if="(hasAccess && !form.body) || fetchingFirstCommit"
                 :disabled="loading"
                 @click="fetchLogs" 
                 type="button" 
@@ -123,7 +123,6 @@ export default defineComponent({
         });
         return {
             form,
-            loading: ref(false),
             tags: ref([]),
             branches: ref([]),
             logs: ref(null),
@@ -139,14 +138,24 @@ export default defineComponent({
             ]),
             repositories: ref([]),
             errors: ref([]),
+            fetchingFirstCommit: ref(false),
+
+            loadingBranches: ref(false),
+            loadingTags: ref(false),
+            loadingLogs: ref(false),
+            testingAccess: ref(false),
         }
     },
 
     computed: {
         releases() {
-            let { tag } = this.tags[0];
+            let tag = null;
+            if (this.tags.length > 0) {
+                tag = this.tags[0]?.tag;
+            } else {
+                tag = '0.0.0';
+            }
 
-            console.log(this.tags)
             // this.form.tag = (this.repository.use_v_in_version ? 'v':'') + semver.inc(tag, 'patch');
             return this.types.map(type => {
                 let value = this.version(semver.inc(tag.replace('v', ''), type, 'alpha'))
@@ -166,6 +175,9 @@ export default defineComponent({
         },
         shouldDisplayLogs() {
             return this.logs && this.logs.length > 0;
+        },
+        loading() {
+            return this.loadingBranches || this.loadingTags || this.loadingLogs || this.fetchingFirstCommit || this.testingAccess
         }
     },
 
@@ -179,35 +191,59 @@ export default defineComponent({
             return prefix + number;
         },
         async testAccess() {
+            this.testingAccess = true;
             await this.cloneRepo();
-            this.fetchTags();
-            this.fetchBranches();
+            await this.fetchBranches();
+            await this.fetchTags();
+            this.testingAccess = false;
         },
         fetchTags() {
             return new Promise ((resolve , reject) => {
-                this.loading = true;
+                this.loadingTags = true;
                 axios.post('/api/fetch-tags', {
                     url: this.form.url,
                 })
-                .then(({ data }) => {
+                .then(async ({ data }) => {
                     this.tags = data;
-                    this.form.tag = data[0].tag
+                    if (data.length > 0) {
+                        this.form.tag = data[0].tag;
+                    } else {
+                        await this.needsInitialRelease();
+                    }
                     this.hasAccess = true;
                     this.errors = [];
                     resolve();
                 })
                 .catch((e) => {
-                    this.errors = [e.response.data.message];
+                    if (e?.response?.data?.message) {
+                        this.errors = [e.response.data?.message];
+                    } else if (e?.message) {
+                        this.errors = [e?.message];
+                    }
+                    console.error('fetchtags', e)
                     reject();
                 })
                 .finally(() => {
-                    this.loading = false;
+                    this.loadingTags = false;
                 })
+            })
+        },
+        needsInitialRelease() {
+            this.fetchingFirstCommit = true;
+            axios.post('/api/first-commit', {
+                url: this.form.url,
+            }).then(async ({ data: commit }) => {
+                this.form.name = "Initial Release";
+                await this.fetchLogs(commit)
+            }).catch(e => {
+                console.error('needsInitialRelease', e)
+            }).finally(() => {
+                this.fetchingFirstCommit = false;
             })
         },
         fetchBranches() {
             return new Promise ((resolve , reject) => {
-                this.loading = true;
+                this.loadingBranches = true;
                 axios.post('/api/fetch-branches', {
                     url: this.form.url,
                 })
@@ -219,13 +255,13 @@ export default defineComponent({
                 })
                 .catch(reject)
                 .finally(() => {
-                    this.loading = false;
+                    this.loadingBranches = false;
                 })
             });
         },
         cloneRepo() {
             return new Promise ((resolve , reject) => {
-                this.loading = true;
+                this.loadingBranches = true;
                 axios.post('/api/clone', {
                     url: this.form.url,
                 })
@@ -238,12 +274,12 @@ export default defineComponent({
                     this.errors = [error.response.data.message]
                 })
                 .finally(() => {
-                    this.loading = false;
+                    this.loadingBranches = false;
                 })
             });
         },
         createTagAndRelease() {
-            this.loading = true;
+            this.loadingTags = true;
             axios.post('/api/create-tag', {
                 url: this.form.url,
                 release_version: this.form.tag,
@@ -261,16 +297,20 @@ export default defineComponent({
                 };
             })
             .finally(() => {
-                this.loading = false;
+                this.loadingTags = false;
             })
         },
-        fetchLogs() {
+        fetchLogs(hash = "") {
             return new Promise ((resolve , reject) => {
-                this.loading = true;
+                this.loadingLogs = true;
+
+                // starting hash or tag
+                let release_version = this.tags[0]?.tag ?? this.branches[0]?.name ?? hash;
+
                 axios.post('/api/fetch-logs', {
                     url: this.form.url,
                     ref: this.form.hash,
-                    release_version: this.tags[0].tag,
+                    release_version,
                 })
                 .then(({ data }) => {
                     this.logs = data;
@@ -290,7 +330,7 @@ export default defineComponent({
                     reject();
                 })
                 .finally(() => {
-                    this.loading = false;
+                    this.loadingLogs = false;
                 })
             });
         },

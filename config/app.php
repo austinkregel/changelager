@@ -52,11 +52,13 @@ return [
     |
     */
 
-    'url' => env('APP_URL', 'http://localhost'),
-
-    'asset_url' => env('ASSET_URL', null),
-
+    'domain' => $domain = env('APP_DOMAIN', 'changelager.app'),
     'vanity_domain' => env('APP_VANITY_DOMAIN', 'changed.to'),
+
+    'url' => $url = env('APP_URL', 'http://'.$domain),
+
+    'asset_url' => env('ASSET_URL', $url),
+
 
     /*
     |--------------------------------------------------------------------------

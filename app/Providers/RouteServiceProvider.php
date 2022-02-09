@@ -38,13 +38,18 @@ class RouteServiceProvider extends ServiceProvider
         $this->configureRateLimiting();
 
         $this->routes(function () {
-            Route::prefix('api')
-                ->middleware(['web', 'auth:sanctum'])
-                ->group(base_path('routes/api.php'));
+            Route::domain(config('app.domain', 'localhost'))->group(function () {
+                Route::prefix('api')
+                    ->middleware(['web', 'auth:sanctum'])
+                    ->group(base_path('routes/api.php'));
 
-            Route::middleware('web')
-                ->namespace($this->namespace)
-                ->group(base_path('routes/web.php'));
+                Route::middleware('web')
+                    ->namespace($this->namespace)
+                    ->group(base_path('routes/web.php'));
+            });
+            Route::domain('{repoIdentifier}.'.config('app.vanity_domain'))->group(function () {
+                Route::middleware('web')->group(base_path('routes/vanity-web.php'));
+            });
         });
     }
 

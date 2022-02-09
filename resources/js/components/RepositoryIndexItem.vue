@@ -7,9 +7,10 @@
             <a :href="'/repositories/'+repository.id">{{ repository.name }}</a>
         </div>
 
-        <div class="flex flex-col text-right">
-            <div>{{ repository.last_released_at ?? 'Feb 2, 2022 18:39' }}</div>
-            <div>{{ repository.last_released_version ?? 'v0.29.1' }}</div>
+        <div class="flex flex-col text-right justify-center h-12">
+            <div>{{ repository.last_released_at ?? '' }}</div>
+            <div>{{ repository.last_released_version ?? '' }}</div>
+            <div v-if="!repository.last_released_at && !repository.last_released_version" class="text-slate-400 dark:text-stone-300 italic">No tags yet</div>
         </div>
     </div>
 

@@ -179,6 +179,18 @@ class GitService
         }, $parts);
     }
 
+    public function getFirstCommit($repo)
+    {
+        $path = storage_path('app/' . Str::slug($repo));
+        abort_if(!file_exists($path), 422, "Repository hasn't been cloned.");
+        
+        $getLog = new Process(['git', 'rev-list', "--max-parents=0", 'HEAD'], $path);
+
+        $getLog->run();
+
+        return trim($getLog->getOutput());
+    }
+
     public function createTag($repo, string $lastRelease, string $hash)
     {
         $path = storage_path('app/' . Str::slug($repo));

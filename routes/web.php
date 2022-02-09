@@ -1,22 +1,9 @@
 <?php
 
 use App\Http\Middleware\RedirectIfAuthenticated;
-use App\Http\Middleware\PublicRepositoryMiddleware;
 use App\Models\Repository;
-use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
-
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| contains the "web" middleware group. Now create something great!
-|
-*/
 
 Route::get('/', fn() => redirect('/login'))->middleware(RedirectIfAuthenticated::class);
 
@@ -36,15 +23,3 @@ Route::middleware(['auth:sanctum', 'verified', 'hasRole:releaser'])->get('/repos
         'repository' => $repository,
     ]);
 })->name('repositories:id');
-
-Route::domain('{repoIdentifier}.'.config('app.vanity_domain'))->get('/{version?}', function ($repositoryIdentifier, $version = null) {
-    $repository = Repository::where('slug', $repositoryIdentifier)->firstOrFail();
-
-    abort_unless($repository->is_public, 404);
-
-    $repository->load(['releases' => fn ($query) => $query->orderBy('released_at', 'desc')]);
-    
-    return Inertia::render('Repositories/Public', [
-        'repository' => $repository,
-    ]);
-})->name('public:id');

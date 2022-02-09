@@ -3,20 +3,20 @@
         <template #header>
             <div v-if="repository" class="flex justify-between items-center">
                 <div>
-                    <h2 class="font-semibold text-xl text-slate-800 dark:text-slate-100 leading-tight">
+                    <h2 class="font-semibold text-3xl text-slate-800 dark:text-slate-100 leading-tight">
                         {{ repository.name}}
                     </h2>
                     
-                    <div class="text-xs text-slate-200">
+                    <div class="text-base text-slate-200">
                         {{ repository.releases.filter(release => release.version === repository.last_released_version)[0]?.hash?.substr(0, 16)}}
                     </div>
                 </div>
                 <div class="text-right">
-                    <div class="flex items-end gap-2">
+                    <div class="flex items-center text-xl gap-2" v-if="repository.last_released_version">
                         <span class="leading-tight font-semibold tracking-wide text-slate-600 dark:text-slate-200">{{ repository.last_released_version}}</span>
-                        <span class="text-xs uppercase text-slate-100 dark:text-slate-300" >Latest version</span>
+                        <span class="uppercase text-slate-100 dark:text-slate-300" >Latest version</span>
                     </div>
-                    <div class="text-xs text-slate-200">
+                    <div v-if="repository.last_released_at" class="text-base text-slate-200">
                         {{ repository.last_released_at}}
                     </div>
                 </div>
@@ -35,6 +35,14 @@
 
                     <div class="text-xs mt-2 text-slate-800 dark:text-slate-200 tracking-wide">Released hash: {{ release.hash.substr(0, 16) }}</div>
                 </div>
+
+                <div v-if="!repository.releases.length" class="space-y-4 text-center text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-700 p-4 mt-2 mb-8 rounded">
+                    <p class="max-w-lg mx-auto tracking-wide leading-loose">No releases yet. If you're the author, you can create a new release by clicking the button below.</p>
+                    <jet-button @click="window.location.replace(route('repositories:id', { repository: repository?.id }))">
+                        Create a release
+                    </jet-button>
+                </div>
+
             </div>
 
             <div class="flex justify-center pb-4 sm:items-center sm:justify-between text-slate-500 dark:text-slate-300">
@@ -60,7 +68,7 @@
 <script>
     import { defineComponent, ref } from 'vue'
     import { Head, Link } from '@inertiajs/inertia-vue3';
-    import AppLayout from '@/Layouts/AppLayout.vue'
+    import AppLayout from '@/Layouts/GuestLayout.vue'
     import JetNavLink from '@/Jetstream/NavLink.vue'
     import JetLabel from '@/Jetstream/Label.vue'
     import JetButton from '@/Jetstream/Button.vue'
@@ -87,7 +95,8 @@
                 enabled: ref(false),
                 tags: ref([]),
                 marked,
-                dayjs
+                dayjs,
+                window
             }
         },
 
