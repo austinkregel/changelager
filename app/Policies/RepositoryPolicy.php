@@ -18,7 +18,7 @@ class RepositoryPolicy
      */
     public function viewAny(User $user)
     {
-        return $user->hasTeamPermission($user->team, 'repository:read');
+        return $user->hasTeamPermission($user->team, 'read');
     }
 
     /**
@@ -30,8 +30,7 @@ class RepositoryPolicy
      */
     public function view(User $user, Repository $repository)
     {
-        dd('hello');
-        return $user->hasTeamPermission($repository->team, 'repository:read');
+        return $user->hasTeamPermission($repository->team, 'read');
     }
 
     /**
@@ -54,7 +53,7 @@ class RepositoryPolicy
      */
     public function update(User $user, Repository $repository)
     {
-        return $user->hasTeamPermission($repository->team, 'update');
+        return $user->hasTeamPermission($repository->team, 'create');
     }
 
     /**
@@ -66,7 +65,7 @@ class RepositoryPolicy
      */
     public function delete(User $user, Repository $repository)
     {
-        return $user->hasTeamPermission($repository->team, 'delete');
+        return $user->hasTeamPermission($repository->team, 'create');
     }
 
     /**
@@ -78,7 +77,7 @@ class RepositoryPolicy
      */
     public function restore(User $user, Repository $repository)
     {
-        return $user->hasTeamPermission($repository->team, 'restore');
+        return $user->hasTeamPermission($repository->team, 'create');
     }
 
     /**
@@ -90,6 +89,6 @@ class RepositoryPolicy
      */
     public function forceDelete(User $user, Repository $repository)
     {
-        return $user->hasTeamPermission($repository->team, 'forceDelete');
+        return $user->hasTeamPermission($repository->team, 'create');
     }
 }

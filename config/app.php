@@ -56,6 +56,8 @@ return [
 
     'asset_url' => env('ASSET_URL', null),
 
+    'vanity_domain' => env('APP_VANITY_DOMAIN', 'changed.to'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone

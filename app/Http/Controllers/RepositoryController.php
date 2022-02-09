@@ -16,7 +16,9 @@ class RepositoryController extends Controller
     }
 
     public function store(Request $request)
-    {
+    { 
+        abort_unless($request->user()->hasTeamPermission($request->user()->currentTeam, 'create'), 403);
+     
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'slug' => 'required|string|max:255',
@@ -29,21 +31,32 @@ class RepositoryController extends Controller
         return $resource->refresh();
     }
 
-    public function show(Repository $repository)
+    public function show(Request $request, Repository $repository)
     {
+        abort_unless($repository->team_id === auth()->user()->current_team_id, 404);
+        
+        abort_unless($request->user()->hasTeamPermission($repository->team, 'read'), 404);
+
         return $repository;
     }
 
     public function update(Request $request, Repository $repository)
     {
+        abort_unless($repository->team_id === $request->user()->current_team_id, 404);
+ 
+        abort_unless($request->user()->hasTeamPermission($repository->team, 'create'), 403);
+ 
         $repository->update($request->all());
 
         return $repository->refresh();
     }
 
-
-    public function destroy(Repository $repository)
+    public function destroy(Request $request, Repository $repository)
     {
+        abort_unless($repository->team_id === $request->user()->current_team_id, 404);
+ 
+        abort_unless($request->user()->hasTeamPermission($repository->team, 'create'), 403);
+
         $repository->delete();
         return response([], 204);
     }

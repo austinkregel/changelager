@@ -50,6 +50,90 @@ class RepositoryTest extends TestCase
 
         $response->assertStatus(200);
 
-        $response->assertJsonPath('data.0.id', $repo->id);
+        $response->assertJsonPath('0.id', $repo->id);
+    }
+
+    public function test_returns_404_for_repsoitory_show_on_other_team()
+    {
+        $this->actingAs($user = User::factory()->withPersonalTeam()->create());
+
+        $repo = Repository::factory()->create([
+            // Note, this team doesn't exist.
+            'team_id' => 123456
+        ]);
+
+        $response = $this->getJson($this->baseUrl . '/' . $repo->id);
+
+        $response->assertStatus(404);
+    }
+
+    public function test_returns_404_for_repository_update_on_other_team()
+    {
+        $this->actingAs($user = User::factory()->withPersonalTeam()->create());
+
+        $repo = Repository::factory()->create([
+            // Note, this team doesn't exist.
+            'team_id' => 123456
+        ]);
+
+        $response = $this->putJson($this->baseUrl . '/' . $repo->id, ['name' => 'foo']);
+
+        $response->assertStatus(404);
+    }
+    
+    public function test_returns_success_for_repository_update_on_other_team()
+    {
+        $this->actingAs($user = User::factory()->withPersonalTeam()->create());
+
+        $repo = Repository::factory()->create([
+            // Note, this team doesn't exist.
+            'team_id' => $user->currentTeam->id,
+        ]);
+
+        $response = $this->putJson($this->baseUrl . '/' . $repo->id, ['name' => 'foo']);
+
+        $response->assertSuccessful();
+    }
+
+    public function test_returns_404_for_repsoitory_delete_on_other_team()
+    {
+        $this->actingAs($user = User::factory()->withPersonalTeam()->create());
+
+        $repo = Repository::factory()->create([
+            // Note, this team doesn't exist.
+            'team_id' => 123456
+        ]);
+
+        $response = $this->deleteJson($this->baseUrl . '/' . $repo->id);
+
+        $response->assertStatus(404);
+    }
+    
+    public function test_returns_success_for_repsoitory_delete_on_other_team()
+    {
+        $this->actingAs($user = User::factory()->withPersonalTeam()->create());
+
+        $repo = Repository::factory()->create([
+            // Note, this team doesn't exist.
+            'team_id' => $user->currentTeam->id,
+        ]);
+
+        $response = $this->deleteJson($this->baseUrl . '/' . $repo->id);
+
+        $response->assertSuccessful();
+    }
+
+    public function test_returns_422_for_repsoitory_create_on_other_team()
+    {
+        $this->actingAs($user = User::factory()->withPersonalTeam()->create());
+
+        $repo = Repository::factory()->create([
+            // Note, this team doesn't exist.
+            'team_id' => 123456
+        ]);
+
+        $response = $this->postJson($this->baseUrl, []);
+
+        $response->assertStatus(422);
     }
 }

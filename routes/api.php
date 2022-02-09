@@ -21,8 +21,8 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::apiResource('repositories', RepositoryController::class);
-Route::post('clone', RepositoryCloneController::class);
-Route::post('fetch-tags', FetchTagsController::class);
-Route::post('fetch-branches', FetchBranchesController::class);
-Route::post('fetch-logs', FetchLogsController::class);
-Route::post('create-tag', CreateTagController::class);
+Route::middleware('hasRole:releaser')->post('clone', RepositoryCloneController::class);
+Route::middleware('hasRole:releaser')->post('fetch-tags', FetchTagsController::class);
+Route::middleware('hasRole:releaser')->post('fetch-branches', FetchBranchesController::class);
+Route::middleware('hasRole:releaser')->post('fetch-logs', FetchLogsController::class);
+Route::middleware('hasRole:releaser')->post('create-tag', CreateTagController::class);

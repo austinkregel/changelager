@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\RedirectIfAuthenticated;
+use App\Http\Middleware\PublicRepositoryMiddleware;
 use App\Models\Repository;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -25,13 +26,23 @@ Route::middleware(['auth:sanctum', 'verified'])->get('/repositories', function (
     ]);
 })->name('repositories');
 
-Route::middleware(['auth:sanctum', 'verified'])->get('/repositories/new', function () {
+Route::middleware(['auth:sanctum', 'verified', 'hasRole:releaser'])->get('/repositories/new', function () {
     return Inertia::render('Repositories/Create');
 })->name('repositories:new');
 
-Route::middleware(['auth:sanctum', 'verified'])->get('/repositories/{repository}', function (Repository $repository) {
+Route::middleware(['auth:sanctum', 'verified', 'hasRole:releaser'])->get('/repositories/{repository}', function (Repository $repository) {
     $repository->load(['releases' => fn ($query) => $query->orderBy('released_at', 'desc')]);
     return Inertia::render('Repositories/Show', [
         'repository' => $repository,
     ]);
 })->name('repositories:id');
+
+Route::middleware([PublicRepositoryMiddleware::class])->domain('{repoIdentifier}.'.config('app.vanity_domain'))->get('/{version?}', function ($repositoryIdentifier, $version = null) {
+    $repository = Repository::where('identifier', $repositoryIdentifier)->firstOrFail();
+
+    $repository->load(['releases' => fn ($query) => $query->orderBy('released_at', 'desc')]);
+    
+    return Inertia::render('Repositories/Public', [
+        'repository' => $repository,
+    ]);
+})->name('public:id');
