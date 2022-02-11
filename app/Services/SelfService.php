@@ -59,6 +59,7 @@ class SelfService
         ->values()
         ->sortByDesc(function(array $tag) {
             return $tag['date'];
-        })->first();
+        })->first()
+        ->hash ?? null;
     }   
 }
