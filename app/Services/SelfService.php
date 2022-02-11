@@ -18,7 +18,7 @@ class SelfService
             return cache()->remember('version', now()->addMinute(), fn () => $this->fetchCurrentCommentHash());
         }
 
-        return cache()->remember('version', now()->addMinute(), fn () => $this->fetchLatestTag());
+        return cache()->remember('version', now()->addMinute(), fn () => $this->fetchLatestTag() ?? $this->fetchCurrentCommentHash());
     }
 
     protected function fetchCurrentCommentHash()
@@ -36,30 +36,31 @@ class SelfService
         $process->run();
 
         return Str::of($process->getOutput())
-        ->explode("\n")
-        ->map('trim')
-        ->flatMap(function ($row) {
-            $formattedRow = explode('  ', $row);
-            $tag = $formattedRow[1] ?? "";
-            preg_match('#\((.*?)\)#', $tag, $match);
-            $potentialTag = ($match[1] ?? "");
-            $hash = trim(end($formattedRow));
+            ->explode("\n")
+            ->map('trim')
+            ->flatMap(function ($row) {
+                $formattedRow = explode('  ', $row);
+                $tag = $formattedRow[1] ?? "";
+                preg_match('#\((.*?)\)#', $tag, $match);
+                $potentialTag = ($match[1] ?? "");
+                $hash = trim(end($formattedRow));
 
-            return Str::of($potentialTag)->explode(", ")->filter()->filter(fn($rawRefName) => Str::startsWith($rawRefName, 'tag: '))->map(function ($rawRefName) {
-                    return Str::substr($rawRefName, 5);
-                
-                return $rawRefName;
-            })->values()->map(fn ($tag) => [
-                'date' => Carbon::parse(trim($formattedRow[0], '"'))->format('Y-m-d'),
-                'tag' => $tag,
-                'hash' => $hash,
-            ])->filter(fn($tag) => !empty($tag['tag']));
-        })
-        ->filter()
-        ->values()
-        ->sortByDesc(function(array $tag) {
-            return $tag['date'];
-        })->first()
-        ->hash ?? null;
+                return Str::of($potentialTag)->explode(", ")->filter()->filter(fn($rawRefName) => Str::startsWith($rawRefName, 'tag: '))->map(function ($rawRefName) {
+                        return Str::substr($rawRefName, 5);
+                    
+                    return $rawRefName;
+                })->values()->map(fn ($tag) => [
+                    'date' => Carbon::parse(trim($formattedRow[0], '"'))->format('Y-m-d'),
+                    'tag' => $tag,
+                    'hash' => $hash,
+                ])->filter(fn($tag) => !empty($tag['tag']));
+            })
+            ->filter()
+            ->values()
+            ->sortByDesc(function(array $tag) {
+                return $tag['date'];
+            })
+            ->first()
+            ->hash ?? null;
     }   
 }
