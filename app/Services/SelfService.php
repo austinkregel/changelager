@@ -45,7 +45,7 @@ class SelfService
             $potentialTag = ($match[1] ?? "");
             $hash = trim(end($formattedRow));
 
-            return Str::of($potentialTag)->explode(", ")->filter()->filter(fn($rawRefName) => Stringable::startsWith($rawRefName, 'tag: '))->map(function ($rawRefName) {
+            return Str::of($potentialTag)->explode(", ")->filter()->filter(fn($rawRefName) => Str::startsWith($rawRefName, 'tag: '))->map(function ($rawRefName) {
                     return Str::substr($rawRefName, 5);
                 
                 return $rawRefName;
