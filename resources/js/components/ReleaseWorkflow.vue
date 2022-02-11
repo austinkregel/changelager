@@ -306,6 +306,10 @@ export default defineComponent({
 
                 // starting hash or tag
                 let release_version = this.tags[0]?.tag ?? this.branches[0]?.name ?? hash;
+                if (!release_version && !this.form.hash) {
+                    this.errors = ['No release found'];
+                    return;
+                }
 
                 axios.post('/api/fetch-logs', {
                     url: this.form.url,
